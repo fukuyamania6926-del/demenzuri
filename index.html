@@ -566,9 +566,14 @@ window.joinRoom = function(codeArg) {
   document.getElementById('current-room').textContent  = code;
   startSync();
   const today = new Date().toISOString().slice(0,10);
-  document.getElementById('in-date').value          = today;
-  document.getElementById('filter-month').value     = today.slice(0,7);
-  document.getElementById('kyuyo-month').value      = today.slice(0,7);
+  document.getElementById('in-date').value = today;
+  // 月フィルターは未設定のときだけ今月をセット
+  if (!document.getElementById('filter-month').value) {
+    document.getElementById('filter-month').value = today.slice(0,7);
+  }
+  if (!document.getElementById('kyuyo-month').value) {
+    document.getElementById('kyuyo-month').value = today.slice(0,7);
+  }
 }
 
 // ローカルストレージのデータを検出して移行ボタンを表示
@@ -640,7 +645,12 @@ function startSync() {
   });
   onSnapshot(roomCol('records'), snap => {
     records = snap.docs.map(d => d.data());
+    // フィルター月・給与月はユーザーが選んだ値を保持したまま再描画
     renderRecords();
+    // 給与タブが開いていれば給与も再描画
+    if (document.getElementById('tab-kyuyo').classList.contains('active')) {
+      renderKyuyo();
+    }
   });
 }
 
