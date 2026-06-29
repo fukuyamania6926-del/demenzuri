@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>出面・給与計算</title>
+<style>
+  :root {
+    --navy: #1a2744;
+    --navy-light: #253561;
+    --orange: #e8601c;
+    --orange-light: #f4874b;
+    --bg: #f2f4f8;
+    --card: #ffffff;
+    --border: #d0d5e0;
+    --text: #1a2744;
+    --text-muted: #6b7490;
+    --green: #2d8a5e;
+    --red: #c0392b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Hiragino Kaku Gothic ProN', 'メイリオ', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+  }
+
+  /* ヘッダー */
+  header {
+    background: var(--navy);
+    color: white;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  header .logo {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  header .logo span { color: var(--orange); }
+  nav { display: flex; gap: 4px; margin-left: auto; }
+  nav button {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  nav button:hover { background: rgba(255,255,255,0.1); color: white; }
+  nav button.active { background: var(--orange); color: white; }
+
+  /* メインレイアウト */
+  main { padding: 24px; max-width: 1100px; margin: 0 auto; }
+
+  /* タブコンテンツ */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* カード */
+  .card {
+    background: var(--card);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--orange);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* フォーム */
+  .form-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 12px;
+  }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+  .form-group input, .form-group select {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: white;
+    min-width: 120px;
+  }
+  .form-group input:focus, .form-group select:focus {
+    outline: none;
+    border-color: var(--orange);
+    box-shadow: 0 0 0 2px rgba(232,96,28,0.15);
+  }
+
+  /* ボタン */
+  .btn {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: var(--orange); color: white; }
+  .btn-primary:hover { background: var(--orange-light); }
+  .btn-navy { background: var(--navy); color: white; }
+  .btn-navy:hover { background: var(--navy-light); }
+  .btn-outline {
+    background: white;
+    color: var(--navy);
+    border: 1px solid var(--border);
+  }
+  .btn-outline:hover { border-color: var(--navy); }
+  .btn-danger { background: var(--red); color: white; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+  .btn-green { background: var(--green); color: white; }
+  .btn-green:hover { background: #256e4c; }
+
+  /* テーブル */
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    background: var(--navy);
+    color: white;
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8f9fc; }
+
+  /* バッジ */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-overtime { background: #fff3e0; color: #e65100; }
+  .badge-normal { background: #e8f5e9; color: #2e7d32; }
+
+  /* 月選択バー */
+  .month-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .month-bar input[type="month"] {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--navy);
+    font-weight: 700;
+    background: white;
+  }
+  .month-bar input[type="month"]:focus {
+    outline: none;
+    border-color: var(--orange);
+  }
+
+  /* 給与サマリカード */
+  .salary-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .summary-card {
+    background: var(--navy);
+    color: white;
+    padding: 14px 16px;
+    border-radius: 8px;
+  }
+  .summary-card .label { font-size: 11px; opacity: 0.7; margin-bottom: 4px; }
+  .summary-card .value { font-size: 22px; font-weight: 700; }
+  .summary-card .value span { font-size: 13px; font-weight: 400; }
+
+  /* 印刷用テーブル */
+  .print-table th { font-size: 11px; padding: 7px 10px; }
+  .print-table td { font-size: 12px; padding: 7px 10px; }
+  .print-table .total-row td {
+    font-weight: 700;
+    background: #f0f3fa;
+    border-top: 2px solid var(--navy);
+  }
+  .amount { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* マスタ管理 */
+  .master-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .master-list { list-style: none; }
+  .master-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .master-list li .info { display: flex; flex-direction: column; gap: 2px; }
+  .master-list li .sub { font-size: 11px; color: var(--text-muted); }
+
+  /* アラート */
+  .alert {
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+  .alert-info { background: #e3f0fc; color: #1565c0; border-left: 3px solid #1976d2; }
+  .alert-success { background: #e8f5e9; color: #256e4c; border-left: 3px solid #2d8a5e; }
+
+  /* 印刷スタイル */
+  @media print {
+    header, nav, .no-print { display: none !important; }
+    body { background: white; }
+    main { padding: 0; max-width: 100%; }
+    .card { border: none; box-shadow: none; padding: 0; }
+    .tab-content { display: block !important; }
+    .tab-content:not(.print-target) { display: none !important; }
+    .print-header { display: block !important; }
+  }
+  .print-header {
+    display: none;
+    text-align: center;
+    margin-bottom: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+
+  /* ツールバー */
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  /* 空状態 */
+  .empty-state {
+    text-align: center;
+    padding: 32px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .tag { color: var(--orange); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">⛏ <span>出面</span>・給与管理</div>
+  <nav>
+    <button class="active" onclick="showTab('tab-demenzuri')">📋 出面入力</button>
+    <button onclick="showTab('tab-kyuyo')">💴 給与計算</button>
+    <button onclick="showTab('tab-master')">⚙ マスタ管理</button>
+    <div style="margin-left:16px;padding:4px 12px;background:rgba(255,255,255,0.15);border-radius:6px;font-size:12px;color:rgba(255,255,255,0.9)">🔑 <span id="current-room" style="font-weight:700;letter-spacing:0.1em"></span> <button onclick="changeRoom()" style="background:none;border:none;color:rgba(255,255,255,0.6);cursor:pointer;font-size:11px;padding:0 0 0 6px">変更</button></div>
+  </nav>
+</header>
+
+<main>
+
+<!-- ===== 出面入力タブ ===== -->
+<div id="tab-demenzuri" class="tab-content active">
+
+  <div class="card">
+    <div class="card-title">📋 出面入力</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>日付</label>
+        <input type="date" id="in-date">
+      </div>
+      <div class="form-group">
+        <label>現場</label>
+        <select id="in-site"><option value="">選択してください</option></select>
+      </div>
+      <div class="form-group">
+        <label>作業員</label>
+        <select id="in-worker"><option value="">選択してください</option></select>
+      </div>
+      <div class="form-group">
+        <label>出面（1=1日、0.5=半日）</label>
+        <input type="number" id="in-demenzuri" min="0.25" max="1" step="0.25" value="1" style="width:90px">
+      </div>
+      <div class="form-group">
+        <label>残業時間（h）</label>
+        <input type="number" id="in-overtime" min="0" max="10" step="0.5" value="0" style="width:80px" placeholder="0" oninput="calcOtAmount()">
+      </div>
+      <div class="form-group">
+        <label>残業手当（円）<span style="font-size:10px;color:var(--text-muted)">直入力可</span></label>
+        <input type="number" id="in-ot-amount" min="0" step="100" value="0" style="width:100px" placeholder="自動計算" oninput="clearOtHours()">
+      </div>
+      <div class="form-group">
+        <label>備考</label>
+        <input type="text" id="in-note" placeholder="任意" style="min-width:160px">
+      </div>
+      <button class="btn btn-primary" onclick="addRecord()" style="margin-bottom:0">追加</button>
+    </div>
+  </div>
+
+  <!-- フィルタ -->
+  <div class="month-bar no-print">
+    <span style="font-weight:700;color:var(--navy)">表示月</span>
+    <input type="month" id="filter-month" onchange="renderRecords()">
+    <select id="filter-site2" style="border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-family:inherit;font-size:13px" onchange="renderRecords()">
+      <option value="">全現場</option>
+    </select>
+    <select id="filter-worker2" style="border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-family:inherit;font-size:13px" onchange="renderRecords()">
+      <option value="">全作業員</option>
+    </select>
+    <span id="record-count" style="margin-left:auto;color:var(--text-muted);font-size:12px"></span>
+  </div>
+
+  <div class="card">
+    <table id="records-table">
+      <thead>
+        <tr>
+          <th>日付</th>
+          <th>曜日</th>
+          <th>現場</th>
+          <th>作業員</th>
+          <th style="text-align:right">出面</th>
+          <th style="text-align:right">日給単価</th>
+          <th style="text-align:right">基本給</th>
+          <th style="text-align:right">残業時間</th>
+          <th style="text-align:right">残業手当</th>
+          <th style="text-align:right">合計</th>
+          <th>備考</th>
+          <th class="no-print"></th>
+        </tr>
+      </thead>
+      <tbody id="records-body"></tbody>
+    </table>
+    <div id="records-empty" class="empty-state" style="display:none">出面データがありません。上のフォームから追加してください。</div>
+  </div>
+</div>
+
+<!-- ===== 給与計算タブ ===== -->
+<div id="tab-kyuyo" class="tab-content">
+  <div class="print-header" id="print-title"></div>
+
+  <div class="month-bar no-print">
+    <span style="font-weight:700;color:var(--navy)">集計月</span>
+    <input type="month" id="kyuyo-month" onchange="renderKyuyo()">
+    <div class="toolbar" style="margin-left:auto">
+      <button class="btn btn-outline no-print" onclick="window.print()">🖨 印刷・PDF保存</button>
+    </div>
+  </div>
+
+  <!-- サマリ -->
+  <div class="salary-summary" id="kyuyo-summary"></div>
+
+  <!-- 給与明細テーブル -->
+  <div class="card">
+    <div class="card-title">💴 給与一覧（作業員別）</div>
+    <table class="print-table" id="kyuyo-table">
+      <thead>
+        <tr>
+          <th>作業員</th>
+          <th style="text-align:right">出面合計</th>
+          <th style="text-align:right">日給単価</th>
+          <th style="text-align:right">基本給合計</th>
+          <th style="text-align:right">残業手当合計</th>
+          <th style="text-align:right">支給合計</th>
+        </tr>
+      </thead>
+      <tbody id="kyuyo-body"></tbody>
+    </table>
+    <div id="kyuyo-empty" class="empty-state" style="display:none">集計データがありません。出面入力から作業日を登録してください。</div>
+  </div>
+
+  <!-- 現場別集計 -->
+  <div class="card">
+    <div class="card-title">🏗 現場別 出勤集計</div>
+    <table class="print-table" id="site-table">
+      <thead>
+        <tr>
+          <th>現場</th>
+          <th style="text-align:right">出面合計</th>
+          <th style="text-align:right">人件費合計</th>
+        </tr>
+      </thead>
+      <tbody id="site-body"></tbody>
+    </table>
+  </div>
+
+  <!-- 日別明細 -->
+  <div class="card">
+    <div class="card-title">📆 日別 出面明細</div>
+    <table class="print-table" id="daily-table">
+      <thead>
+        <tr>
+          <th>日付</th>
+          <th>曜日</th>
+          <th>現場</th>
+          <th>作業員</th>
+          <th style="text-align:right">出面</th>
+          <th style="text-align:right">基本給</th>
+          <th style="text-align:right">残業手当</th>
+          <th style="text-align:right">合計</th>
+          <th>備考</th>
+        </tr>
+      </thead>
+      <tbody id="daily-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== マスタ管理タブ ===== -->
+<div id="tab-master" class="tab-content">
+  <div class="master-grid">
+
+    <!-- 作業員マスタ -->
+    <div class="card">
+      <div class="card-title">👷 作業員マスタ</div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1">
+          <label>氏名</label>
+          <input type="text" id="m-worker-name" placeholder="例：田中 太郎">
+        </div>
+        <div class="form-group">
+          <label>日給（円）</label>
+          <input type="number" id="m-worker-daily" placeholder="例：18000" style="width:130px">
+        </div>
+        <div class="form-group" style="justify-content:flex-end;padding-bottom:1px">
+          <span style="font-size:11px;color:var(--text-muted)">残業：1,500円/時（固定）</span>
+        </div>
+        <button class="btn btn-primary" onclick="addWorker()">追加</button>
+      </div>
+      <ul class="master-list" id="worker-list"></ul>
+      <div id="worker-empty" class="empty-state" style="display:none">作業員が登録されていません</div>
+    </div>
+
+    <!-- 現場マスタ -->
+    <div class="card">
+      <div class="card-title">🏗 現場マスタ</div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1">
+          <label>現場名</label>
+          <input type="text" id="m-site-name" placeholder="例：○○ビル新築工事">
+        </div>
+        <button class="btn btn-primary" onclick="addSite()">追加</button>
+      </div>
+      <ul class="master-list" id="site-list"></ul>
+      <div id="site-empty" class="empty-state" style="display:none">現場が登録されていません</div>
+    </div>
+
+  </div>
+
+  <div class="alert alert-info no-print">
+    🔑 共有コードが同じであれば、どのパソコン・ブラウザからでも同じデータにアクセスできます。
+  </div>
+</div>
+
+</main>
+
+
+<!-- 共有コード入力画面 -->
+<div id="room-screen" style="display:none;position:fixed;inset:0;background:var(--navy);z-index:999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:16px;padding:40px;width:380px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+    <div style="font-size:32px;margin-bottom:8px;">⛏</div>
+    <div style="font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px;">出面・給与管理</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">共有コードでデータを同期します</div>
+    <input id="room-input" type="text" maxlength="20" placeholder="例：DOME2024"
+      style="width:100%;padding:12px;font-size:20px;text-align:center;letter-spacing:0.15em;font-weight:700;border:2px solid var(--border);border-radius:8px;font-family:inherit;text-transform:uppercase;margin-bottom:8px;"
+      onkeydown="if(event.key==='Enter')joinRoom()">
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:14px;">英数字で自由に決めてください（例：DOME・KAMASITE・ISD2024）</div>
+    <button class="btn btn-primary" onclick="joinRoom()" style="width:100%;padding:12px;font-size:15px;margin-bottom:10px;">このコードで開始</button>
+
+    <!-- 移行ボタン（ローカルデータがある場合のみ表示） -->
+    <div id="migrate-area" style="display:none;margin-top:6px;padding:14px;background:#fff8e1;border-radius:8px;border:1px solid #ffe082;">
+      <div style="font-size:12px;font-weight:700;color:#e65100;margin-bottom:6px;">⚠️ 以前のデータが見つかりました</div>
+      <div style="font-size:11px;color:#795548;margin-bottom:10px;" id="migrate-count"></div>
+      <button class="btn btn-green" onclick="migrateData()" style="width:100%;padding:10px;font-size:13px;">📤 以前のデータをFirebaseに移行する</button>
+    </div>
+
+    <div id="migrate-status" style="display:none;margin-top:10px;padding:10px;border-radius:8px;font-size:12px;"></div>
+    <div style="margin-top:14px;font-size:11px;color:var(--text-muted)">同じコードを入力すれば、どのパソコンからでも同じデータにアクセスできます</div>
+  </div>
+</div>
+
+<div id="app-screen" style="display:none">
+</div><!-- /app-screen -->
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot }
+  from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBkhioHi4FsJfpU7LBNW2QUMW8FjC1SKDY",
+  authDomain: "mi-nice-isd-workschedule.firebaseapp.com",
+  projectId: "mi-nice-isd-workschedule",
+  storageBucket: "mi-nice-isd-workschedule.firebasestorage.app",
+  messagingSenderId: "800226051958",
+  appId: "1:800226051958:web:8cdf212c5ba864fc879c57"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+let ROOM_CODE = localStorage.getItem('dm_room_code') || '';
+let workers = [], sites = [], records = [];
+const WEEK = ['日','月','火','水','木','金','土'];
+const OT_RATE = 1500;
+
+function roomDoc(col, id) { return doc(db, 'rooms', ROOM_CODE, col, String(id)); }
+function roomCol(col)     { return collection(db, 'rooms', ROOM_CODE, col); }
+
+// =========================================
+// 共有コード
+// =========================================
+window.joinRoom = function(codeArg) {
+  const code = (typeof codeArg === 'string' ? codeArg : document.getElementById('room-input').value.trim().toUpperCase());
+  if (!code) return alert('コードを入力してください');
+  ROOM_CODE = code;
+  localStorage.setItem('dm_room_code', code);
+  document.getElementById('room-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display  = 'block';
+  document.getElementById('current-room').textContent  = code;
+  startSync();
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('in-date').value          = today;
+  document.getElementById('filter-month').value     = today.slice(0,7);
+  document.getElementById('kyuyo-month').value      = today.slice(0,7);
+}
+
+// ローカルストレージのデータを検出して移行ボタンを表示
+function checkLocalData() {
+  try {
+    const lw = JSON.parse(localStorage.getItem('dm_workers')) || [];
+    const ls = JSON.parse(localStorage.getItem('dm_sites'))   || [];
+    const lr = JSON.parse(localStorage.getItem('dm_records')) || [];
+    const total = lw.length + ls.length + lr.length;
+    if (total > 0) {
+      document.getElementById('migrate-area').style.display = 'block';
+      document.getElementById('migrate-count').textContent =
+        `作業員 ${lw.length}件・現場 ${ls.length}件・出面記録 ${lr.length}件`;
+    }
+  } catch(e) {}
+}
+
+window.migrateData = async function() {
+  const code = document.getElementById('room-input').value.trim().toUpperCase();
+  if (!code) return alert('先にコードを入力してください');
+  const lw = JSON.parse(localStorage.getItem('dm_workers')) || [];
+  const ls = JSON.parse(localStorage.getItem('dm_sites'))   || [];
+  const lr = JSON.parse(localStorage.getItem('dm_records')) || [];
+
+  const statusEl = document.getElementById('migrate-status');
+  statusEl.style.display = 'block';
+  statusEl.style.background = '#e3f0fc';
+  statusEl.style.color = '#1565c0';
+  statusEl.textContent = '移行中...しばらくお待ちください';
+
+  try {
+    // 一時的にROOM_CODEをセット
+    ROOM_CODE = code;
+    let count = 0;
+    for (const w of lw) { await setDoc(roomDoc('workers', w.id), w); count++; }
+    for (const s of ls) { await setDoc(roomDoc('sites',   s.id), s); count++; }
+    for (const r of lr) { await setDoc(roomDoc('records', r.id), r); count++; }
+
+    statusEl.style.background = '#e8f5e9';
+    statusEl.style.color = '#2d8a5e';
+    statusEl.textContent = `✅ 移行完了！${count}件のデータをFirebaseに保存しました`;
+    document.getElementById('migrate-area').style.display = 'none';
+
+    // 3秒後に自動でアプリを開く
+    setTimeout(() => joinRoom(code), 2000);
+  } catch(e) {
+    statusEl.style.background = '#fdecea';
+    statusEl.style.color = '#c0392b';
+    statusEl.textContent = `❌ エラーが発生しました: ${e.message}`;
+  }
+}
+window.changeRoom = function() {
+  if (!confirm('別の共有コードに切り替えますか？')) return;
+  localStorage.removeItem('dm_room_code');
+  location.reload();
+}
+
+// =========================================
+// Firestore同期
+// =========================================
+function startSync() {
+  onSnapshot(roomCol('workers'), snap => {
+    workers = snap.docs.map(d => d.data());
+    renderMaster(); populateSelects();
+  });
+  onSnapshot(roomCol('sites'), snap => {
+    sites = snap.docs.map(d => d.data());
+    renderMaster(); populateSelects();
+  });
+  onSnapshot(roomCol('records'), snap => {
+    records = snap.docs.map(d => d.data());
+    renderRecords();
+  });
+}
+
+// =========================================
+// タブ切替
+// =========================================
+window.showTab = function(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  ['tab-demenzuri','tab-kyuyo','tab-master'].forEach((t,i) => {
+    if(t===id) document.querySelectorAll('nav button')[i].classList.add('active');
+  });
+  if (id === 'tab-kyuyo') renderKyuyo();
+}
+
+// =========================================
+// マスタ管理
+// =========================================
+window.addWorker = async function() {
+  const name  = document.getElementById('m-worker-name').value.trim();
+  const daily = parseInt(document.getElementById('m-worker-daily').value) || 0;
+  if (!name)  return alert('氏名を入力してください');
+  if (!daily) return alert('日給を入力してください');
+  await setDoc(roomDoc('workers', Date.now()), { id: Date.now(), name, daily });
+  document.getElementById('m-worker-name').value  = '';
+  document.getElementById('m-worker-daily').value = '';
+}
+window.deleteWorker = async function(id) {
+  if (!confirm('削除しますか？')) return;
+  await deleteDoc(roomDoc('workers', id));
+}
+window.addSite = async function() {
+  const name = document.getElementById('m-site-name').value.trim();
+  if (!name) return alert('現場名を入力してください');
+  const id = Date.now();
+  await setDoc(roomDoc('sites', id), { id, name });
+  document.getElementById('m-site-name').value = '';
+}
+window.deleteSite = async function(id) {
+  if (!confirm('削除しますか？')) return;
+  await deleteDoc(roomDoc('sites', id));
+}
+function renderMaster() {
+  const wl = document.getElementById('worker-list');
+  const we = document.getElementById('worker-empty');
+  if (!workers.length) { wl.innerHTML=''; we.style.display='block'; }
+  else {
+    we.style.display='none';
+    wl.innerHTML = workers.map(w => `<li>
+      <div class="info"><span>${w.name}</span><span class="sub">日給 ${w.daily.toLocaleString()}円　残業 1,500円/時</span></div>
+      <button class="btn btn-sm btn-danger" onclick="deleteWorker(${w.id})">削除</button></li>`).join('');
+  }
+  const sl = document.getElementById('site-list');
+  const se = document.getElementById('site-empty');
+  if (!sites.length) { sl.innerHTML=''; se.style.display='block'; }
+  else {
+    se.style.display='none';
+    sl.innerHTML = sites.map(s => `<li><span>${s.name}</span>
+      <button class="btn btn-sm btn-danger" onclick="deleteSite(${s.id})">削除</button></li>`).join('');
+  }
+}
+function populateSelects() {
+  const ws = document.getElementById('in-worker');
+  const ss = document.getElementById('in-site');
+  const cw = ws.value, cs = ss.value;
+  ws.innerHTML = '<option value="">選択してください</option>' + workers.map(w=>`<option value="${w.id}">${w.name}</option>`).join('');
+  ss.innerHTML = '<option value="">選択してください</option>' + sites.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  ws.value = cw; ss.value = cs;
+  const fw = document.getElementById('filter-worker2');
+  const fs = document.getElementById('filter-site2');
+  const fwv = fw.value, fsv = fs.value;
+  fw.innerHTML = '<option value="">全作業員</option>' + workers.map(w=>`<option value="${w.id}">${w.name}</option>`).join('');
+  fs.innerHTML = '<option value="">全現場</option>'   + sites.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  fw.value = fwv; fs.value = fsv;
+}
+
+// =========================================
+// 出面記録
+// =========================================
+window.calcOtAmount = function() {
+  const h = parseFloat(document.getElementById('in-overtime').value) || 0;
+  document.getElementById('in-ot-amount').value = Math.round(h * OT_RATE) || 0;
+}
+window.clearOtHours = function() {
+  document.getElementById('in-overtime').value = '0';
+}
+window.addRecord = async function() {
+  const date      = document.getElementById('in-date').value;
+  const siteId    = parseInt(document.getElementById('in-site').value);
+  const workerId  = parseInt(document.getElementById('in-worker').value);
+  const demenzuri = parseFloat(document.getElementById('in-demenzuri').value) || 1;
+  const overtime  = parseFloat(document.getElementById('in-overtime').value) || 0;
+  const otAmount  = parseInt(document.getElementById('in-ot-amount').value) || 0;
+  const note      = document.getElementById('in-note').value.trim();
+  if (!date)     return alert('日付を選択してください');
+  if (!siteId)   return alert('現場を選択してください');
+  if (!workerId) return alert('作業員を選択してください');
+  const dup = records.find(r => r.date===date && r.workerId===workerId && r.siteId===siteId);
+  if (dup) {
+    const wName = document.getElementById('in-worker').options[document.getElementById('in-worker').selectedIndex].text;
+    const sName = document.getElementById('in-site').options[document.getElementById('in-site').selectedIndex].text;
+    return alert(`⚠️ 同じ日付・作業員・現場の記録がすでに存在します。\n（${date} / ${wName} / ${sName}）`);
+  }
+  const id = Date.now();
+  await setDoc(roomDoc('records', id), { id, date, siteId, workerId, demenzuri, overtime, otAmount, note });
+  document.getElementById('in-note').value      = '';
+  document.getElementById('in-overtime').value  = '0';
+  document.getElementById('in-ot-amount').value = '0';
+  document.getElementById('in-demenzuri').value = '1';
+}
+window.deleteRecord = async function(id) {
+  await deleteDoc(roomDoc('records', id));
+}
+
+function getWorker(id)  { return workers.find(w => w.id===id) || { name:'不明', daily:0 }; }
+function getSite(id)    { return sites.find(s => s.id===id)   || { name:'不明' }; }
+function getOtAmount(r) {
+  if (r.otAmount && r.otAmount > 0) return r.otAmount;
+  return Math.round((r.overtime||0) * OT_RATE);
+}
+function getFilteredRecords() {
+  const month  = document.getElementById('filter-month').value;
+  const siteId = parseInt(document.getElementById('filter-site2').value) || 0;
+  const wId    = parseInt(document.getElementById('filter-worker2').value) || 0;
+  return records.filter(r => {
+    if (month  && !r.date.startsWith(month)) return false;
+    if (siteId && r.siteId   !== siteId)     return false;
+    if (wId    && r.workerId !== wId)         return false;
+    return true;
+  }).sort((a,b) => a.date.localeCompare(b.date));
+}
+function renderRecords() {
+  const rows  = getFilteredRecords();
+  const tbody = document.getElementById('records-body');
+  const empty = document.getElementById('records-empty');
+  const count = document.getElementById('record-count');
+  if (!rows.length) { tbody.innerHTML=''; empty.style.display='block'; count.textContent='0件'; return; }
+  empty.style.display='none'; count.textContent=`${rows.length}件`;
+  let tb=0, tot=0, tt=0;
+  tbody.innerHTML = rows.map(r => {
+    const w=getWorker(r.workerId), s=getSite(r.siteId);
+    const d=new Date(r.date+'T00:00:00'), dow=WEEK[d.getDay()];
+    const dem=r.demenzuri!==undefined?r.demenzuri:1;
+    const base=Math.round(w.daily*dem), ot=getOtAmount(r), sum=base+ot;
+    tb+=base; tot+=ot; tt+=sum;
+    const wc=d.getDay()===0?'color:#c0392b':d.getDay()===6?'color:#1565c0':'';
+    const otLabel=ot===0?'—':(r.otAmount&&r.otAmount>0)?`<span class="badge badge-overtime">直入力</span>`:`<span class="badge badge-overtime">${r.overtime}h</span>`;
+    return `<tr>
+      <td>${r.date}</td><td style="${wc}">${dow}</td><td>${s.name}</td><td>${w.name}</td>
+      <td class="amount"><span class="badge ${dem<1?'badge-overtime':'badge-normal'}">${dem}</span></td>
+      <td class="amount">${w.daily.toLocaleString()}円</td>
+      <td class="amount">${base.toLocaleString()}円</td>
+      <td class="amount">${otLabel}</td>
+      <td class="amount">${ot?ot.toLocaleString()+'円':'—'}</td>
+      <td class="amount" style="font-weight:700">${sum.toLocaleString()}円</td>
+      <td style="color:var(--text-muted)">${r.note||''}</td>
+      <td class="no-print"><button class="btn btn-sm btn-danger" onclick="deleteRecord(${r.id})">削除</button></td>
+    </tr>`;
+  }).join('') + `<tr style="background:#f0f3fa">
+    <td colspan="6" style="font-weight:700">合計</td>
+    <td class="amount" style="font-weight:700">${tb.toLocaleString()}円</td><td></td>
+    <td class="amount" style="font-weight:700">${tot.toLocaleString()}円</td>
+    <td class="amount" style="font-weight:700;color:var(--orange)">${tt.toLocaleString()}円</td>
+    <td colspan="2"></td></tr>`;
+}
+
+// =========================================
+// 給与計算
+// =========================================
+function renderKyuyo() {
+  const month = document.getElementById('kyuyo-month').value;
+  if (!month) return;
+  const [y,m] = month.split('-');
+  document.getElementById('print-title').textContent = `${y}年${parseInt(m)}月 給与一覧`;
+  const mr = records.filter(r => r.date.startsWith(month));
+  const wMap={}, sMap={};
+  mr.forEach(r => {
+    const w=getWorker(r.workerId), dem=r.demenzuri!==undefined?r.demenzuri:1;
+    if (!wMap[r.workerId]) wMap[r.workerId]={ name:w.name, daily:w.daily, demTotal:0, otTotal:0 };
+    wMap[r.workerId].demTotal+=dem; wMap[r.workerId].otTotal+=getOtAmount(r);
+    const s=getSite(r.siteId);
+    if (!sMap[r.siteId]) sMap[r.siteId]={ name:s.name, demTotal:0, cost:0 };
+    sMap[r.siteId].demTotal+=dem; sMap[r.siteId].cost+=Math.round(w.daily*dem)+getOtAmount(r);
+  });
+  let totalPay=0, totalDem=0, totalW=0;
+  Object.values(wMap).forEach(w=>{ totalPay+=Math.round(w.daily*w.demTotal)+w.otTotal; totalDem+=w.demTotal; totalW++; });
+  document.getElementById('kyuyo-summary').innerHTML = `
+    <div class="summary-card"><div class="label">対象作業員</div><div class="value">${totalW}<span> 名</span></div></div>
+    <div class="summary-card"><div class="label">延べ出面合計</div><div class="value">${totalDem}<span> 人工</span></div></div>
+    <div class="summary-card"><div class="label">給与支払合計</div><div class="value">${totalPay.toLocaleString()}<span> 円</span></div></div>`;
+  const kb=document.getElementById('kyuyo-body'), ke=document.getElementById('kyuyo-empty');
+  const ents=Object.values(wMap);
+  if (!ents.length) { kb.innerHTML=''; ke.style.display='block'; }
+  else {
+    ke.style.display='none';
+    let gb=0,go=0,gt=0,gd=0;
+    kb.innerHTML = ents.sort((a,b)=>a.name.localeCompare(b.name,'ja')).map(w=>{
+      const base=Math.round(w.daily*w.demTotal), ot=w.otTotal, total=base+ot;
+      gb+=base; go+=ot; gt+=total; gd+=w.demTotal;
+      return `<tr><td>${w.name}</td><td class="amount">${w.demTotal}</td><td class="amount">${w.daily.toLocaleString()}円</td>
+        <td class="amount">${base.toLocaleString()}円</td><td class="amount">${ot?ot.toLocaleString()+'円':'—'}</td>
+        <td class="amount" style="font-weight:700;color:var(--orange)">${total.toLocaleString()}円</td></tr>`;
+    }).join('')+`<tr class="total-row"><td>合計</td><td class="amount">${gd}</td><td></td>
+      <td class="amount">${gb.toLocaleString()}円</td><td class="amount">${go.toLocaleString()}円</td>
+      <td class="amount">${gt.toLocaleString()}円</td></tr>`;
+  }
+  document.getElementById('site-body').innerHTML = Object.values(sMap).map(s=>`<tr>
+    <td>${s.name}</td><td class="amount">${s.demTotal}</td>
+    <td class="amount" style="font-weight:700">${s.cost.toLocaleString()}円</td></tr>`).join('');
+  document.getElementById('daily-body').innerHTML = mr.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(r=>{
+    const w=getWorker(r.workerId), s=getSite(r.siteId);
+    const d=new Date(r.date+'T00:00:00'), dow=WEEK[d.getDay()];
+    const dem=r.demenzuri!==undefined?r.demenzuri:1;
+    const base=Math.round(w.daily*dem), ot=getOtAmount(r);
+    return `<tr><td>${r.date}</td><td>${dow}</td><td>${s.name}</td><td>${w.name}</td>
+      <td class="amount">${dem}</td><td class="amount">${base.toLocaleString()}円</td>
+      <td class="amount">${ot?ot.toLocaleString()+'円':'—'}</td>
+      <td class="amount" style="font-weight:700">${(base+ot).toLocaleString()}円</td>
+      <td style="color:var(--text-muted);font-size:11px">${r.note||''}</td></tr>`;
+  }).join('');
+}
+
+// =========================================
+// 初期化
+// =========================================
+if (ROOM_CODE) {
+  joinRoom(ROOM_CODE);
+} else {
+  document.getElementById('room-screen').style.display = 'flex';
+  document.getElementById('app-screen').style.display  = 'none';
+  checkLocalData();
+}
+</script>
+</body>
+</html>
