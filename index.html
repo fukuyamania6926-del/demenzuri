@@ -783,7 +783,7 @@ function getFilteredRecords() {
     return true;
   }).sort((a,b) => a.date.localeCompare(b.date));
 }
-function renderRecords() {
+window.renderRecords = function renderRecords() {
   const rows  = getFilteredRecords();
   const tbody = document.getElementById('records-body');
   const empty = document.getElementById('records-empty');
