@@ -821,7 +821,7 @@ window.renderRecords = function renderRecords() {
 // =========================================
 // 給与計算
 // =========================================
-function renderKyuyo() {
+window.renderKyuyo = function() {
   const month = document.getElementById('kyuyo-month').value;
   if (!month) return;
   const [y,m] = month.split('-');
