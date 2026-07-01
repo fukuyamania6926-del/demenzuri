@@ -702,7 +702,10 @@ function renderMaster() {
     we.style.display='none';
     wl.innerHTML = workers.map(w => `<li>
       <div class="info"><span>${w.name}</span><span class="sub">日給 ${w.daily.toLocaleString()}円　残業 1,500円/時</span></div>
-      <button class="btn btn-sm btn-danger" onclick="deleteWorker(${w.id})">削除</button></li>`).join('');
+      <div style="display:flex;gap:4px">
+        <button class="btn btn-sm btn-outline" onclick="editWorker(${w.id})">編集</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteWorker(${w.id})">削除</button>
+      </div></li>`).join('');
   }
   const sl = document.getElementById('site-list');
   const se = document.getElementById('site-empty');
@@ -710,8 +713,33 @@ function renderMaster() {
   else {
     se.style.display='none';
     sl.innerHTML = sites.map(s => `<li><span>${s.name}</span>
-      <button class="btn btn-sm btn-danger" onclick="deleteSite(${s.id})">削除</button></li>`).join('');
+      <div style="display:flex;gap:4px">
+        <button class="btn btn-sm btn-outline" onclick="editSite(${s.id})">編集</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteSite(${s.id})">削除</button>
+      </div></li>`).join('');
   }
+}
+
+window.editSite = async function(id) {
+  const site = sites.find(s => s.id === id);
+  if (!site) return;
+  const newName = prompt('現場名を編集してください：', site.name);
+  if (newName === null) return; // キャンセル
+  if (!newName.trim()) return alert('現場名を入力してください');
+  await setDoc(roomDoc('sites', id), { id, name: newName.trim() });
+}
+
+window.editWorker = async function(id) {
+  const worker = workers.find(w => w.id === id);
+  if (!worker) return;
+  const newName = prompt('氏名を編集してください：', worker.name);
+  if (newName === null) return;
+  if (!newName.trim()) return alert('氏名を入力してください');
+  const newDaily = prompt('日給を編集してください（円）：', worker.daily);
+  if (newDaily === null) return;
+  const daily = parseInt(newDaily);
+  if (!daily) return alert('正しい日給を入力してください');
+  await setDoc(roomDoc('workers', id), { id, name: newName.trim(), daily });
 }
 function populateSelects() {
   const ws = document.getElementById('in-worker');
